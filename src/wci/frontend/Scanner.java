@@ -31,4 +31,10 @@ public abstract class Scanner
     {
         return source.nextChar();
     }
+
+    public char peekChar() throws Exception
+    {
+        return source.peekChar();
+    }
+
 }

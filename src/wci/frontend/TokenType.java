@@ -1,6 +1,5 @@
 package wci.frontend;
 
-public enum TokenType
+public interface TokenType
 {
-
 }

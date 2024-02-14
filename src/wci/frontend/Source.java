@@ -80,11 +80,20 @@ public class Source implements MessageProducer
 
     public char peekChar() throws Exception
     {
-        currentChar();
+        currentChar(); // update current state
         if(line == null)
             return EOF;
         int nextPos = currentPos + 1;
         return nextPos < line.length() ? line.charAt(nextPos) : EOL;
+    }
+
+    public char peekNextChar() throws Exception
+    {
+        currentChar(); // update current state
+        if(line == null)
+            return EOF;
+        int targetPos = currentPos + 2;
+        return targetPos < line.length() ? line.charAt(targetPos) : EOL;
     }
 
     public void readLine() throws Exception

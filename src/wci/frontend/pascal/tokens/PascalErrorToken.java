@@ -1,0 +1,19 @@
+package wci.frontend.pascal.tokens;
+
+import wci.frontend.Source;
+import wci.frontend.pascal.PascalErrorCode;
+
+public class PascalErrorToken extends PascalToken
+{
+    public PascalErrorToken(Source source, PascalErrorCode errorCode, String tokenText) throws Exception
+    {
+        super(source);
+
+        this.text = tokenText;
+        this.type = PascalTokenType.ERROR;
+        this.value = errorCode;
+    }
+
+    @Override
+    protected void extract() throws Exception {}
+}

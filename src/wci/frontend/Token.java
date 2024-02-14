@@ -65,4 +65,9 @@ public class Token
     {
         return source.peekChar();
     }
+
+    protected char peekNextChar() throws Exception
+    {
+        return source.peekNextChar();
+    }
 }
