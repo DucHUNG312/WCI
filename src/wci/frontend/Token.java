@@ -26,6 +26,31 @@ public class Token
         nextChar(); // consume current character
     }
 
+    public int getLineNum()
+    {
+        return lineNum;
+    }
+
+    public int getPosition()
+    {
+        return position;
+    }
+
+    public String getText()
+    {
+        return text;
+    }
+
+    public TokenType getType()
+    {
+        return type;
+    }
+
+    public Object getValue()
+    {
+        return value;
+    }
+
     protected char currentChar() throws Exception
     {
         return source.currentChar();
