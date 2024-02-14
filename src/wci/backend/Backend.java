@@ -10,6 +10,12 @@ import wci.message.MessageProducer;
 public abstract class Backend implements MessageProducer
 {
     protected static MessageHandler messageHandler;
+
+    static
+    {
+        messageHandler =  new MessageHandler();
+    }
+
     protected SymTab symTab;
     protected ICode iCode;
 
