@@ -3,6 +3,7 @@ package wci.intermediate.symtabimpl;
 import wci.intermediate.SymTab;
 import wci.intermediate.SymTabEntry;
 import wci.intermediate.SymTabKey;
+import wci.intermediate.icodeimpl.ICodeKeyImpl;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -18,6 +19,12 @@ public class SymTabEntryImpl extends HashMap<SymTabKey, Object> implements SymTa
         this.name = name;
         this.symTab = symtab;
         this.lineNumbers = new ArrayList<Integer>();
+    }
+
+    @Override
+    public int getCurrentNestingLevel()
+    {
+        return symTab.getNestingLevel();
     }
 
     @Override

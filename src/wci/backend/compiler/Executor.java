@@ -2,7 +2,6 @@ package wci.backend.compiler;
 
 import wci.backend.Backend;
 import wci.intermediate.ICode;
-import wci.intermediate.SymTab;
 import wci.intermediate.SymTabStack;
 import wci.message.Message;
 import wci.message.MessageType;
