@@ -1,6 +1,9 @@
 package wci.frontend.pascal;
 
 import wci.frontend.*;
+import wci.frontend.pascal.parsers.StatementParser;
+import wci.intermediate.ICodeFactory;
+import wci.intermediate.ICodeNode;
 import wci.intermediate.SymTabEntry;
 import wci.message.Message;
 
@@ -23,41 +26,45 @@ public class PascalParserTD extends Parser
         super(scanner);
     }
 
+    public PascalParserTD(PascalParserTD parent)
+    {
+        super(parent.getScanner());
+    }
+
     /**
      * Parse a Pascal source program and generate the symbol table
      * and the intermediate code.
      */
     public void parse() throws Exception
     {
-        Token token;
         long startTime = System.currentTimeMillis();
+        iCode = ICodeFactory.createICode();
 
         try
         {
-            // Loop over each token until the end of file.
-            while (!((token = nextToken()) instanceof EofToken))
+            Token token = nextToken();
+            ICodeNode rootNode = null;
+
+            if(token.getType() == BEGIN)
             {
-                TokenType tokenType = token.getType();
+                StatementParser statementParser = new StatementParser(this);
+                rootNode = statementParser.parse(token);
+                token = currentToken();
+            }
+            else
+            {
+                errorHandler.flag(token, UNEXPECTED_TOKEN, this);
+            }
 
-                // Cross reference only the identifier
-                if(tokenType == IDENTIFIER)
-                {
-                    String name = token.getText().toLowerCase();
+            if(token.getType() != DOT)
+            {
+                errorHandler.flag(token, MISSING_PERIOD, this);
+            }
+            token = currentToken(); // consume dot
 
-                    SymTabEntry entry = symTabStack.lookup(name);
-                    if(entry == null)
-                    {
-                        entry = symTabStack.enterLocal(name);
-                    }
-
-                    entry.appendLineNumber(token.getLineNum());
-                }
-                else if (tokenType == ERROR)
-                {
-                    errorHandler.flag(token, (PascalErrorCode) token.getValue(),
-                            this);
-                }
-
+            if(rootNode != null)
+            {
+                iCode.setRoot(rootNode);
             }
 
             // Send the parser summary message.
@@ -80,5 +87,10 @@ public class PascalParserTD extends Parser
     public int getErrorCount()
     {
         return errorHandler.getErrorCount();
+    }
+
+    public static PascalErrorHandler getErrorHandler()
+    {
+        return errorHandler;
     }
 }

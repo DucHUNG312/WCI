@@ -12,6 +12,7 @@ import wci.message.listeners.BackendMessageListener;
 import wci.message.listeners.ParserMessageListener;
 import wci.message.listeners.SourceMessageListener;
 import wci.util.CrossReferencer;
+import wci.util.ParseTreePrinter;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -53,6 +54,11 @@ public class Pascal
             {
                 CrossReferencer crossReferencer = new CrossReferencer();
                 crossReferencer.print(symTabStack);
+            }
+            if(intermediate)
+            {
+                ParseTreePrinter treePrinter = new ParseTreePrinter(System.out);
+                treePrinter.print(iCode);
             }
 
             backend.process(iCode, symTabStack);
