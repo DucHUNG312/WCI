@@ -2,6 +2,7 @@ package wci.backend;
 
 import wci.intermediate.ICode;
 import wci.intermediate.SymTab;
+import wci.intermediate.SymTabStack;
 import wci.message.Message;
 import wci.message.MessageHandler;
 import wci.message.MessageListener;
@@ -34,7 +35,7 @@ public abstract class Backend implements MessageProducer
         return messageHandler;
     }
 
-    public abstract void process(ICode iCode, SymTab symTab) throws Exception;
+    public abstract void process(ICode iCode, SymTabStack symTabStack) throws Exception;
 
     @Override
     public void addMessageListener(MessageListener listener)

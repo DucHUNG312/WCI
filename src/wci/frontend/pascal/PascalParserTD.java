@@ -1,6 +1,7 @@
 package wci.frontend.pascal;
 
 import wci.frontend.*;
+import wci.intermediate.SymTabEntry;
 import wci.message.Message;
 
 import static wci.frontend.pascal.tokens.PascalTokenType.*;
@@ -26,28 +27,33 @@ public class PascalParserTD extends Parser
      * Parse a Pascal source program and generate the symbol table
      * and the intermediate code.
      */
-    public void parse()
-            throws Exception
+    public void parse() throws Exception
     {
         Token token;
         long startTime = System.currentTimeMillis();
 
-        try {
+        try
+        {
             // Loop over each token until the end of file.
-            while (!((token = nextToken()) instanceof EofToken)) {
+            while (!((token = nextToken()) instanceof EofToken))
+            {
                 TokenType tokenType = token.getType();
 
-                if (tokenType != ERROR) {
+                // Cross reference only the identifier
+                if(tokenType == IDENTIFIER)
+                {
+                    String name = token.getText().toLowerCase();
 
-                    // Format each token.
-                    sendMessage(new Message(TOKEN,
-                            new Object[] {token.getLineNum(),
-                                    token.getPosition(),
-                                    tokenType,
-                                    token.getText(),
-                                    token.getValue()}));
+                    SymTabEntry entry = symTabStack.lookup(name);
+                    if(entry == null)
+                    {
+                        entry = symTabStack.enterLocal(name);
+                    }
+
+                    entry.appendLineNumber(token.getLineNum());
                 }
-                else {
+                else if (tokenType == ERROR)
+                {
                     errorHandler.flag(token, (PascalErrorCode) token.getValue(),
                             this);
                 }
@@ -61,7 +67,8 @@ public class PascalParserTD extends Parser
                             getErrorCount(),
                             elapsedTime}));
         }
-        catch (java.io.IOException ex) {
+        catch (java.io.IOException ex)
+        {
             errorHandler.abortTranslation(IO_ERROR, this);
         }
     }
