@@ -1,7 +1,6 @@
 package wci.backend;
 
 import wci.intermediate.ICode;
-import wci.intermediate.SymTab;
 import wci.intermediate.SymTabStack;
 import wci.message.Message;
 import wci.message.MessageHandler;
@@ -17,12 +16,12 @@ public abstract class Backend implements MessageProducer
         messageHandler =  new MessageHandler();
     }
 
-    protected SymTab symTab;
+    protected SymTabStack symTabStack;
     protected ICode iCode;
 
-    public SymTab getSymTab()
+    public SymTabStack getSymTabStack()
     {
-        return symTab;
+        return symTabStack;
     }
 
     public ICode getICode()

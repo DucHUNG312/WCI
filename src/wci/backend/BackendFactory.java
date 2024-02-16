@@ -1,7 +1,7 @@
 package wci.backend;
 
 import wci.backend.compiler.CodeGenerator;
-import wci.backend.compiler.Executor;
+import wci.backend.interpreter.Executor;
 
 public class BackendFactory
 {
