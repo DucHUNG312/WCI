@@ -70,6 +70,18 @@ public class ExpressionParser extends StatementParser
         MULT_OPS_MAP.put(PascalTokenType.AND,   ICodeNodeTypeImpl.AND);
     };
 
+    // Synchronization set for starting an expression.
+    static final EnumSet<PascalTokenType> EXPR_START_SET = EnumSet.of(
+                    PascalTokenType.PLUS,
+                    PascalTokenType.MINUS,
+                    PascalTokenType.IDENTIFIER,
+                    PascalTokenType.INTEGER,
+                    PascalTokenType.REAL,
+                    PascalTokenType.STRING,
+                    PascalTokenType.NOT,
+                    PascalTokenType.LEFT_PAREN
+    );
+
     public ExpressionParser(PascalParserTD parent)
     {
         super(parent);

@@ -10,9 +10,17 @@ import wci.intermediate.SymTabEntry;
 import wci.intermediate.icodeimpl.ICodeKeyImpl;
 import wci.intermediate.icodeimpl.ICodeNodeTypeImpl;
 
+import java.util.EnumSet;
+
 public class AssignmentStatementParser extends StatementParser
 {
-
+    // Synchronization set for the := token.
+    private static final EnumSet<PascalTokenType> COLON_EQUALS_SET = ExpressionParser.EXPR_START_SET.clone();
+    static
+    {
+        COLON_EQUALS_SET.add(PascalTokenType.COLON_EQUALS);
+        COLON_EQUALS_SET.addAll(StatementParser.STMT_FOLLOW_SET);
+    }
     public AssignmentStatementParser(PascalParserTD parent)
     {
         super(parent);
@@ -44,6 +52,7 @@ public class AssignmentStatementParser extends StatementParser
         assignNode.addChild(variableNode);
 
         // Look for the := token.
+        token = synchronize(COLON_EQUALS_SET);
         if (token.getType() == PascalTokenType.COLON_EQUALS)
         {
             token = nextToken();  // consume the :=
