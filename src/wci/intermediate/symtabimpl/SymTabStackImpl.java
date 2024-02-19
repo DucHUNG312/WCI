@@ -9,6 +9,7 @@ import java.util.ArrayList;
 
 public class SymTabStackImpl extends ArrayList<SymTab> implements SymTabStack
 {
+    private SymTabEntry programId;
     private int currentNestingLevel;
 
     public SymTabStackImpl()
@@ -44,6 +45,52 @@ public class SymTabStackImpl extends ArrayList<SymTab> implements SymTabStack
     @Override
     public SymTabEntry lookup(String name)
     {
-        return lookupLocal(name);
+        SymTabEntry foundEntry = null;
+
+        for (int i = currentNestingLevel; (i >= 0) && (foundEntry == null); i--)
+        {
+            foundEntry = get(i).lookup(name);
+        }
+
+        return foundEntry;
     }
+
+    @Override
+    public void setProgramId(SymTabEntry entry)
+    {
+        this.programId = entry;
+    }
+
+    @Override
+    public SymTabEntry getProgramId()
+    {
+        return programId;
+    }
+
+    @Override
+    public SymTab push()
+    {
+        SymTab symTab = SymTabFactory.createSymTab(++currentNestingLevel);
+        add(symTab);
+        return symTab;
+    }
+
+    @Override
+    public SymTab push(SymTab symTab)
+    {
+        ++currentNestingLevel;
+        add(symTab);
+        return symTab;
+    }
+
+    @Override
+    public SymTab pop()
+    {
+        SymTab symTab = get(currentNestingLevel);
+        remove(currentNestingLevel--);
+
+        return symTab;
+    }
+
+
 }
