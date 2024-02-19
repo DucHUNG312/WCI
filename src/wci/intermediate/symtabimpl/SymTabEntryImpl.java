@@ -1,8 +1,6 @@
 package wci.intermediate.symtabimpl;
 
-import wci.intermediate.SymTab;
-import wci.intermediate.SymTabEntry;
-import wci.intermediate.SymTabKey;
+import wci.intermediate.*;
 import wci.intermediate.icodeimpl.ICodeKeyImpl;
 
 import java.util.ArrayList;
@@ -13,6 +11,9 @@ public class SymTabEntryImpl extends HashMap<SymTabKey, Object> implements SymTa
     private String name;
     private SymTab symTab;
     private ArrayList<Integer> lineNumbers;
+
+    private Definition definition;
+    private TypeSpec typeSpec;
 
     public SymTabEntryImpl(String name, SymTab symtab)
     {
@@ -61,5 +62,25 @@ public class SymTabEntryImpl extends HashMap<SymTabKey, Object> implements SymTa
     public Object getAttribute(SymTabKey key)
     {
         return get(key);
+    }
+
+    @Override
+    public void setDefinition(Definition definition) {
+
+    }
+
+    @Override
+    public Definition getDefinition() {
+        return null;
+    }
+
+    @Override
+    public void setTypeSpec(TypeSpec typeSpec) {
+
+    }
+
+    @Override
+    public TypeSpec getTypeSpec() {
+        return null;
     }
 }

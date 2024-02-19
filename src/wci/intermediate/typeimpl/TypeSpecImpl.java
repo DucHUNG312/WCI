@@ -4,6 +4,7 @@ import wci.intermediate.SymTabEntry;
 import wci.intermediate.TypeForm;
 import wci.intermediate.TypeKey;
 import wci.intermediate.TypeSpec;
+import wci.intermediate.symtabimpl.Predefined;
 
 import java.util.HashMap;
 

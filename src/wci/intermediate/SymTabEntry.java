@@ -11,4 +11,8 @@ public interface SymTabEntry
     public ArrayList<Integer> getLineNumbers();
     public void setAttribute(SymTabKey key, Object value);
     public Object getAttribute(SymTabKey key);
+    public void setDefinition(Definition definition);
+    public Definition getDefinition();
+    public void setTypeSpec(TypeSpec typeSpec);
+    public TypeSpec getTypeSpec();
 }
