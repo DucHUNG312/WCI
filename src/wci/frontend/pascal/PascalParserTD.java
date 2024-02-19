@@ -1,10 +1,15 @@
 package wci.frontend.pascal;
 
 import wci.frontend.*;
+import wci.frontend.pascal.parsers.BlockParser;
 import wci.frontend.pascal.parsers.StatementParser;
+import wci.intermediate.ICode;
 import wci.intermediate.ICodeFactory;
 import wci.intermediate.ICodeNode;
 import wci.intermediate.SymTabEntry;
+import wci.intermediate.symtabimpl.DefinitionImpl;
+import wci.intermediate.symtabimpl.Predefined;
+import wci.intermediate.symtabimpl.SymTabKeyImpl;
 import wci.message.Message;
 
 import static wci.frontend.pascal.tokens.PascalTokenType.*;
@@ -17,6 +22,7 @@ import java.util.EnumSet;
 public class PascalParserTD extends Parser
 {
     protected static PascalErrorHandler errorHandler = new PascalErrorHandler();
+    private SymTabEntry routineId; // name of the routine being parsed
 
     /**
      * Constructor.
@@ -39,34 +45,34 @@ public class PascalParserTD extends Parser
     public void parse() throws Exception
     {
         long startTime = System.currentTimeMillis();
-        iCode = ICodeFactory.createICode();
+        ICode iCode = ICodeFactory.createICode();
+
+        Predefined.initialize(symTabStack);
+
+        // Create a dummy program identifier symbol table entry
+        routineId = symTabStack.enterLocal("DummyProgramName".toLowerCase());
+        routineId.setDefinition(DefinitionImpl.PROGRAM);
+        symTabStack.setProgramId(routineId);
+
+        // Push a new symbol table onto the symbol table stack and set
+        // the routine/s symbol table and intermediate code.
+        routineId.setAttribute(SymTabKeyImpl.ROUTINE_SYMTAB, symTabStack.push());
+        routineId.setAttribute(SymTabKeyImpl.ROUTINE_ICODE, iCode);
+        BlockParser blockParser = new BlockParser(this);
 
         try
         {
             Token token = nextToken();
-            ICodeNode rootNode = null;
+            ICodeNode rootNode = blockParser.parse(token, routineId);
+            iCode.setRoot(rootNode);
+            symTabStack.pop();
 
-            if(token.getType() == BEGIN)
-            {
-                StatementParser statementParser = new StatementParser(this);
-                rootNode = statementParser.parse(token);
-                token = currentToken();
-            }
-            else
-            {
-                errorHandler.flag(token, UNEXPECTED_TOKEN, this);
-            }
-
+            token = currentToken();
             if(token.getType() != DOT)
             {
                 errorHandler.flag(token, MISSING_PERIOD, this);
             }
             token = currentToken(); // consume dot
-
-            if(rootNode != null)
-            {
-                iCode.setRoot(rootNode);
-            }
 
             // Send the parser summary message.
             float elapsedTime = (System.currentTimeMillis() - startTime)/1000f;
