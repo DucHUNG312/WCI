@@ -1,7 +1,7 @@
 package wci.message.listeners;
 
 import wci.frontend.TokenType;
-import wci.frontend.pascal.tokens.PascalTokenType;
+import wci.frontend.pascal.PascalTokenType;
 import wci.message.Message;
 import wci.message.MessageListener;
 import wci.message.MessageType;

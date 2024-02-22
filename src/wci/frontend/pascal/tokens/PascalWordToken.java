@@ -1,6 +1,7 @@
 package wci.frontend.pascal.tokens;
 
 import wci.frontend.Source;
+import wci.frontend.pascal.PascalTokenType;
 
 public class PascalWordToken extends PascalToken
 {

@@ -6,7 +6,6 @@ public interface SymTabEntry
 {
     public String getName();
     public SymTab getSymTab();
-    public int getCurrentNestingLevel();
     public void appendLineNumber(int lineNumber);
     public ArrayList<Integer> getLineNumbers();
     public void setAttribute(SymTabKey key, Object value);

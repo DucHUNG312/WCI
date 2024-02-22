@@ -23,7 +23,7 @@ public class PascalErrorHandler
     public void flag(Token token, PascalErrorCode errorCode, Parser parser)
     {
         parser.sendMessage(new Message(MessageType.SYNTAX_ERROR, new Object[]{
-                token.getLineNum(),
+                token.getLineNumber(),
                 token.getPosition(),
                 token.getText(),
                 errorCode.toString()

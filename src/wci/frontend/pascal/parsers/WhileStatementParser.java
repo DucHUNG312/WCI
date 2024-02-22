@@ -1,38 +1,54 @@
 package wci.frontend.pascal.parsers;
 
-import wci.frontend.Token;
-import wci.frontend.pascal.PascalErrorCode;
-import wci.frontend.pascal.PascalParserTD;
-import wci.frontend.pascal.tokens.PascalTokenType;
-import wci.intermediate.ICodeFactory;
-import wci.intermediate.ICodeNode;
-import wci.intermediate.icodeimpl.ICodeNodeTypeImpl;
-
 import java.util.EnumSet;
+
+import wci.frontend.*;
+import wci.frontend.pascal.*;
+import wci.intermediate.*;
+import wci.intermediate.icodeimpl.*;
+
+import static wci.frontend.pascal.PascalTokenType.*;
+import static wci.frontend.pascal.PascalErrorCode.*;
+import static wci.intermediate.icodeimpl.ICodeNodeTypeImpl.*;
+import static wci.intermediate.icodeimpl.ICodeKeyImpl.*;
 
 public class WhileStatementParser extends StatementParser
 {
-    private static final EnumSet<PascalTokenType> DO_SET = StatementParser.STMT_START_SET.clone();
-    static
-    {
-        DO_SET.add(PascalTokenType.DO);
-        DO_SET.addAll(StatementParser.STMT_FOLLOW_SET);
-    }
+    /**
+     * Constructor.
+     * @param parent the parent parser.
+     */
     public WhileStatementParser(PascalParserTD parent)
     {
         super(parent);
     }
 
-    @Override
-    public ICodeNode parse(Token token) throws Exception
+    // Synchronization set for DO.
+    private static final EnumSet<PascalTokenType> DO_SET =
+        StatementParser.STMT_START_SET.clone();
+    static {
+        DO_SET.add(DO);
+        DO_SET.addAll(StatementParser.STMT_FOLLOW_SET);
+    }
+
+    /**
+     * Parse a WHILE statement.
+     * @param token the initial token.
+     * @return the root node of the generated parse tree.
+     * @throws Exception if an error occurred.
+     */
+    public ICodeNode parse(Token token)
+        throws Exception
     {
-        token = nextToken(); // consume WHILE
+        token = nextToken();  // consume the WHILE
 
         // Create LOOP, TEST, and NOT nodes.
-        ICodeNode loopNode = ICodeFactory.createICodeNode(ICodeNodeTypeImpl.LOOP);
-        ICodeNode breakNode = ICodeFactory.createICodeNode(ICodeNodeTypeImpl.TEST);
+        ICodeNode loopNode = ICodeFactory.createICodeNode(LOOP);
+        ICodeNode breakNode = ICodeFactory.createICodeNode(TEST);
         ICodeNode notNode = ICodeFactory.createICodeNode(ICodeNodeTypeImpl.NOT);
 
+        // The LOOP node adopts the TEST node as its first child.
+        // The TEST node adopts the NOT node as its only child.
         loopNode.addChild(breakNode);
         breakNode.addChild(notNode);
 
@@ -43,19 +59,18 @@ public class WhileStatementParser extends StatementParser
 
         // Synchronize at the DO.
         token = synchronize(DO_SET);
-        if(token.getType() == PascalTokenType.DO)
-        {
-            token = nextToken(); // consume the DO
+        if (token.getType() == DO) {
+            token = nextToken();  // consume the DO
         }
-        else
-        {
-            errorHandler.flag(token, PascalErrorCode.MISSING_DO, this);
+        else {
+            errorHandler.flag(token, MISSING_DO, this);
         }
 
         // Parse the statement.
         // The LOOP node adopts the statement subtree as its second child.
         StatementParser statementParser = new StatementParser(this);
         loopNode.addChild(statementParser.parse(token));
+
         return loopNode;
     }
 }

@@ -1,31 +1,41 @@
 package wci.frontend.pascal.parsers;
 
-import wci.frontend.Token;
-import wci.frontend.pascal.PascalErrorCode;
-import wci.frontend.pascal.PascalParserTD;
-import wci.frontend.pascal.tokens.PascalTokenType;
-import wci.intermediate.ICodeFactory;
-import wci.intermediate.ICodeNode;
-import wci.intermediate.ICodeNodeType;
-import wci.intermediate.icodeimpl.ICodeKeyImpl;
-import wci.intermediate.icodeimpl.ICodeNodeTypeImpl;
+import wci.frontend.*;
+import wci.frontend.pascal.*;
+import wci.intermediate.*;
+
+import static wci.frontend.pascal.PascalTokenType.*;
+import static wci.frontend.pascal.PascalErrorCode.*;
+import static wci.intermediate.icodeimpl.ICodeNodeTypeImpl.*;
 
 public class CompoundStatementParser extends StatementParser
 {
+    /**
+     * Constructor.
+     * @param parent the parent parser.
+     */
     public CompoundStatementParser(PascalParserTD parent)
     {
         super(parent);
     }
 
-    @Override
-    public ICodeNode parse(Token token) throws Exception
+    /**
+     * Parse a compound statement.
+     * @param token the initial token.
+     * @return the root node of the generated parse tree.
+     * @throws Exception if an error occurred.
+     */
+    public ICodeNode parse(Token token)
+        throws Exception
     {
-        token = nextToken();
+        token = nextToken();  // consume the BEGIN
 
-        ICodeNode compoundNode = ICodeFactory.createICodeNode(ICodeNodeTypeImpl.COMPOUND);
+        // Create the COMPOUND node.
+        ICodeNode compoundNode = ICodeFactory.createICodeNode(COMPOUND);
 
+        // Parse the statement list terminated by the END token.
         StatementParser statementParser = new StatementParser(this);
-        statementParser.parseList(token, compoundNode, PascalTokenType.END, PascalErrorCode.MISSING_END);
+        statementParser.parseList(token, compoundNode, END, MISSING_END);
 
         return compoundNode;
     }

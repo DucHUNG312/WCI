@@ -26,7 +26,7 @@ public class Token
         nextChar(); // consume current character
     }
 
-    public int getLineNum()
+    public int getLineNumber()
     {
         return lineNum;
     }

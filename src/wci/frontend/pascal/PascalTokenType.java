@@ -1,4 +1,4 @@
-package wci.frontend.pascal.tokens;
+package wci.frontend.pascal;
 
 import wci.frontend.TokenType;
 

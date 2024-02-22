@@ -1,7 +1,5 @@
 package wci.frontend;
 
-import wci.intermediate.ICode;
-import wci.intermediate.SymTab;
 import wci.intermediate.SymTabFactory;
 import wci.intermediate.SymTabStack;
 import wci.message.Message;
@@ -21,22 +19,15 @@ public abstract class Parser implements MessageProducer
     }
 
     protected Scanner scanner;
-    protected ICode iCode;
 
     protected Parser(Scanner scanner)
     {
         this.scanner = scanner;
-        this.iCode = null;
     }
 
     public Scanner getScanner()
     {
         return scanner;
-    }
-
-    public ICode getICode()
-    {
-        return iCode;
     }
 
     public static SymTabStack getSymTabStack()

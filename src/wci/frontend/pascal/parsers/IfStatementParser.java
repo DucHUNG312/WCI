@@ -1,34 +1,48 @@
 package wci.frontend.pascal.parsers;
 
-import wci.frontend.Token;
-import wci.frontend.pascal.PascalErrorCode;
-import wci.frontend.pascal.PascalParserTD;
-import wci.frontend.pascal.tokens.PascalTokenType;
-import wci.intermediate.ICodeFactory;
-import wci.intermediate.ICodeNode;
-import wci.intermediate.icodeimpl.ICodeNodeTypeImpl;
-
 import java.util.EnumSet;
+
+import wci.frontend.*;
+import wci.frontend.pascal.*;
+import wci.intermediate.*;
+import wci.intermediate.icodeimpl.*;
+
+import static wci.frontend.pascal.PascalTokenType.*;
+import static wci.frontend.pascal.PascalErrorCode.*;
+import static wci.intermediate.icodeimpl.ICodeNodeTypeImpl.*;
+import static wci.intermediate.icodeimpl.ICodeKeyImpl.*;
 
 public class IfStatementParser extends StatementParser
 {
-    // Synchronization set for THEN.
-    private static final EnumSet<PascalTokenType> THEN_SET = StatementParser.STMT_START_SET.clone();
-    static
-    {
-        THEN_SET.add(PascalTokenType.THEN);
-        THEN_SET.addAll(StatementParser.STMT_FOLLOW_SET);
-    }
+    /**
+     * Constructor.
+     * @param parent the parent parser.
+     */
     public IfStatementParser(PascalParserTD parent)
     {
         super(parent);
     }
 
-    @Override
-    public ICodeNode parse(Token token) throws Exception
-    {
-        token = nextToken(); // consume IF
+    // Synchronization set for THEN.
+    private static final EnumSet<PascalTokenType> THEN_SET =
+        StatementParser.STMT_START_SET.clone();
+    static {
+        THEN_SET.add(THEN);
+        THEN_SET.addAll(StatementParser.STMT_FOLLOW_SET);
+    }
 
+    /**
+     * Parse an IF statement.
+     * @param token the initial token.
+     * @return the root node of the generated parse tree.
+     * @throws Exception if an error occurred.
+     */
+    public ICodeNode parse(Token token)
+        throws Exception
+    {
+        token = nextToken();  // consume the IF
+
+        // Create an IF node.
         ICodeNode ifNode = ICodeFactory.createICodeNode(ICodeNodeTypeImpl.IF);
 
         // Parse the expression.
@@ -36,14 +50,13 @@ public class IfStatementParser extends StatementParser
         ExpressionParser expressionParser = new ExpressionParser(this);
         ifNode.addChild(expressionParser.parse(token));
 
+        // Synchronize at the THEN.
         token = synchronize(THEN_SET);
-        if(token.getType() == PascalTokenType.THEN)
-        {
-            token = nextToken(); // consume the THEN
+        if (token.getType() == THEN) {
+            token = nextToken();  // consume the THEN
         }
-        else
-        {
-            errorHandler.flag(token, PascalErrorCode.MISSING_END, this);
+        else {
+            errorHandler.flag(token, MISSING_THEN, this);
         }
 
         // Parse the THEN statement.
@@ -53,9 +66,9 @@ public class IfStatementParser extends StatementParser
         token = currentToken();
 
         // Look for an ELSE.
-        if (token.getType() == PascalTokenType.ELSE)
-        {
-            token = nextToken(); // consume the THEN
+        if (token.getType() == ELSE) {
+            token = nextToken();  // consume the THEN
+
             // Parse the ELSE statement.
             // The IF node adopts the statement subtree as its third child.
             ifNode.addChild(statementParser.parse(token));

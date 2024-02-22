@@ -2,6 +2,7 @@ package wci.frontend.pascal.tokens;
 
 import wci.frontend.Source;
 import wci.frontend.pascal.PascalErrorCode;
+import wci.frontend.pascal.PascalTokenType;
 
 public class PascalNumberToken extends PascalToken
 {

@@ -1,86 +1,119 @@
 package wci.intermediate.typeimpl;
 
-import wci.intermediate.SymTabEntry;
-import wci.intermediate.TypeForm;
-import wci.intermediate.TypeKey;
-import wci.intermediate.TypeSpec;
-import wci.intermediate.symtabimpl.Predefined;
-
 import java.util.HashMap;
 
-public class TypeSpecImpl extends HashMap<TypeKey, Object> implements TypeSpec
-{
-    private TypeForm form;
-    private SymTabEntry identifier;
+import wci.intermediate.*;
+import wci.intermediate.symtabimpl.Predefined;
 
+import static wci.intermediate.typeimpl.TypeFormImpl.ARRAY;
+import static wci.intermediate.typeimpl.TypeFormImpl.SUBRANGE;
+import static wci.intermediate.typeimpl.TypeKeyImpl.*;
+
+public class TypeSpecImpl
+    extends HashMap<TypeKey, Object>
+    implements TypeSpec
+{
+    private TypeForm form;           // type form
+    private SymTabEntry identifier;  // type identifier
+
+    /**
+     * Constructor.
+     * @param form the type form.
+     */
     public TypeSpecImpl(TypeForm form)
     {
         this.form = form;
         this.identifier = null;
     }
 
+    /**
+     * Constructor.
+     * @param value a string value.
+     */
     public TypeSpecImpl(String value)
     {
-        this.form = TypeFormImpl.ARRAY;
+        this.form = ARRAY;
 
-        TypeSpec indexType = new TypeSpecImpl(TypeFormImpl.SUBRANGE);
-        indexType.setAttribute(TypeKeyImpl.SUBRANGE_BASE_TYPE, Predefined.integerType);
-        indexType.setAttribute(TypeKeyImpl.SUBRANGE_MIN_VALUE, 1); // Array start from 1
-        indexType.setAttribute(TypeKeyImpl.SUBRANGE_MAX_VALUE, value.length());
+        TypeSpec indexType = new TypeSpecImpl(SUBRANGE);
+        indexType.setAttribute(SUBRANGE_BASE_TYPE, Predefined.integerType);
+        indexType.setAttribute(SUBRANGE_MIN_VALUE, 1);
+        indexType.setAttribute(SUBRANGE_MAX_VALUE, value.length());
 
-        setAttribute(TypeKeyImpl.ARRAY_INDEX_TYPE, indexType);
-        setAttribute(TypeKeyImpl.ARRAY_ELEMENT_TYPE, Predefined.charType);
-        setAttribute(TypeKeyImpl.ARRAY_ELEMENT_COUNT, value.length());
+        setAttribute(ARRAY_INDEX_TYPE, indexType);
+        setAttribute(ARRAY_ELEMENT_TYPE, Predefined.charType);
+        setAttribute(ARRAY_ELEMENT_COUNT, value.length());
     }
 
-    @Override
+    /**
+     * Getter
+     * @return the type form.
+     */
     public TypeForm getForm()
     {
         return form;
     }
 
-    @Override
+    /**
+     * Setter.
+     * @param identifier the type identifier (symbol table entry).
+     */
     public void setIdentifier(SymTabEntry identifier)
     {
         this.identifier = identifier;
     }
 
-    @Override
+    /**
+     * Getter.
+     * @return the type identifier (symbol table entry).
+     */
     public SymTabEntry getIdentifier()
     {
         return identifier;
     }
 
-    @Override
-    public void setAttribute(TypeKey key, Object object)
+    /**
+     * Set an attribute of the specification.
+     * @param key the attribute key.
+     * @param value the attribute value.
+     */
+    public void setAttribute(TypeKey key, Object value)
     {
-        put(key, object);
+        this.put(key, value);
     }
 
-    @Override
+    /**
+     * Get the value of an attribute of the specification.
+     * @param key the attribute key.
+     * @return the attribute value.
+     */
     public Object getAttribute(TypeKey key)
     {
-        return get(key);
+        return this.get(key);
     }
 
-    @Override
+    /**
+     * @return true if this is a Pascal string type.
+     */
     public boolean isPascalString()
     {
-        if(form == TypeFormImpl.ARRAY)
-        {
-            TypeSpec elmType = (TypeSpec) getAttribute(TypeKeyImpl.ARRAY_ELEMENT_TYPE);
-            TypeSpec indexType = (TypeSpec) getAttribute(TypeKeyImpl.ARRAY_INDEX_TYPE);
+        if (form == ARRAY) {
+            TypeSpec elmtType  = (TypeSpec) getAttribute(ARRAY_ELEMENT_TYPE);
+            TypeSpec indexType = (TypeSpec) getAttribute(ARRAY_INDEX_TYPE);
 
-            return (elmType.baseType() == Predefined.charType) && (indexType.baseType() == Predefined.integerType);
+            return (elmtType.baseType()  == Predefined.charType) &&
+                   (indexType.baseType() == Predefined.integerType);
         }
-        return false;
+        else {
+            return false;
+        }
     }
 
-    @Override
+    /**
+     * @return the base type of this type.
+     */
     public TypeSpec baseType()
     {
-        return (TypeFormImpl)form == TypeFormImpl.SUBRANGE
-                ? (TypeSpec) getAttribute(TypeKeyImpl.SUBRANGE_BASE_TYPE)
-                : this;
+        return form == SUBRANGE ? (TypeSpec) getAttribute(SUBRANGE_BASE_TYPE)
+                                : this;
     }
 }

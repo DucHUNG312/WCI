@@ -7,7 +7,9 @@ import wci.frontend.Parser;
 import wci.frontend.Source;
 import wci.intermediate.ICode;
 import wci.intermediate.SymTab;
+import wci.intermediate.SymTabEntry;
 import wci.intermediate.SymTabStack;
+import wci.intermediate.symtabimpl.SymTabKeyImpl;
 import wci.message.listeners.BackendMessageListener;
 import wci.message.listeners.ParserMessageListener;
 import wci.message.listeners.SourceMessageListener;
@@ -47,21 +49,26 @@ public class Pascal
             parser.parse();
             source.close();
 
-            iCode = parser.getICode();
-            symTabStack = parser.getSymTabStack();
-
-            if(xref)
+            if(parser.getErrorCount() == 0)
             {
-                CrossReferencer crossReferencer = new CrossReferencer();
-                crossReferencer.print(symTabStack);
-            }
-            if(intermediate)
-            {
-                ParseTreePrinter treePrinter = new ParseTreePrinter(System.out);
-                treePrinter.print(iCode);
-            }
+                symTabStack = parser.getSymTabStack();
 
-            backend.process(iCode, symTabStack);
+                SymTabEntry programId = symTabStack.getProgramId();
+                iCode = (ICode) programId.getAttribute(SymTabKeyImpl.ROUTINE_ICODE);
+
+                if(xref)
+                {
+                    CrossReferencer crossReferencer = new CrossReferencer();
+                    crossReferencer.print(symTabStack);
+                }
+                if(intermediate)
+                {
+                    ParseTreePrinter treePrinter = new ParseTreePrinter(System.out);
+                    treePrinter.print(symTabStack);
+                }
+
+                backend.process(iCode, symTabStack);
+            }
         }
         catch (Exception e)
         {

@@ -1,4 +1,5 @@
 package wci.intermediate;
 
-public interface TypeKey {
+public interface TypeKey
+{
 }

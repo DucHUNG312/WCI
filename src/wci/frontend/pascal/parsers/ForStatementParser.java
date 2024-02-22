@@ -1,57 +1,71 @@
 package wci.frontend.pascal.parsers;
 
-import wci.frontend.Token;
-import wci.frontend.TokenType;
-import wci.frontend.pascal.PascalErrorCode;
-import wci.frontend.pascal.PascalParserTD;
-import wci.frontend.pascal.tokens.PascalTokenType;
-import wci.intermediate.ICodeFactory;
-import wci.intermediate.ICodeNode;
-import wci.intermediate.icodeimpl.ICodeKeyImpl;
-import wci.intermediate.icodeimpl.ICodeNodeTypeImpl;
-
 import java.util.EnumSet;
+
+import wci.frontend.*;
+import wci.frontend.pascal.*;
+import wci.intermediate.*;
+
+import static wci.frontend.pascal.PascalTokenType.*;
+import static wci.frontend.pascal.PascalErrorCode.*;
+import static wci.intermediate.icodeimpl.ICodeNodeTypeImpl.*;
+import static wci.intermediate.icodeimpl.ICodeKeyImpl.*;
 
 public class ForStatementParser extends StatementParser
 {
-    // Synchronization set for TO or DOWNTO.
-    static final EnumSet<PascalTokenType> TO_DOWNTO_SET = ExpressionParser.EXPR_START_SET.clone();
-    static
-    {
-        TO_DOWNTO_SET.add(PascalTokenType.TO);
-        TO_DOWNTO_SET.add(PascalTokenType.DOWNTO);
-        TO_DOWNTO_SET.addAll(StatementParser.STMT_FOLLOW_SET);
-    }
-
-    // Synchronization set for DO
-    private static final EnumSet<PascalTokenType> DO_SET = StatementParser.STMT_START_SET.clone();
-    static
-    {
-        DO_SET.add(PascalTokenType.DO);
-        DO_SET.addAll(StatementParser.STMT_FOLLOW_SET);
-    }
-
+    /**
+     * Constructor.
+     * @param parent the parent parser.
+     */
     public ForStatementParser(PascalParserTD parent)
     {
         super(parent);
     }
 
-    @Override
-    public ICodeNode parse(Token token) throws Exception
+    // Synchronization set for TO or DOWNTO.
+    private static final EnumSet<PascalTokenType> TO_DOWNTO_SET =
+        ExpressionParser.EXPR_START_SET.clone();
+    static {
+        TO_DOWNTO_SET.add(TO);
+        TO_DOWNTO_SET.add(DOWNTO);
+        TO_DOWNTO_SET.addAll(StatementParser.STMT_FOLLOW_SET);
+    }
+
+    // Synchronization set for DO.
+    private static final EnumSet<PascalTokenType> DO_SET =
+        StatementParser.STMT_START_SET.clone();
+    static {
+        DO_SET.add(DO);
+        DO_SET.addAll(StatementParser.STMT_FOLLOW_SET);
+    }
+
+    /**
+     * Parse the FOR statement.
+     * @param token the initial token.
+     * @return the root node of the generated parse tree.
+     * @throws Exception if an error occurred.
+     */
+    public ICodeNode parse(Token token)
+        throws Exception
     {
-        token = nextToken(); // consume FOR
+        token = nextToken();  // consume the FOR
         Token targetToken = token;
 
-        ICodeNode compoundNode = ICodeFactory.createICodeNode(ICodeNodeTypeImpl.COMPOUND);
-        ICodeNode loopNode = ICodeFactory.createICodeNode(ICodeNodeTypeImpl.LOOP);
-        ICodeNode testNode = ICodeFactory.createICodeNode(ICodeNodeTypeImpl.TEST);
+        // Create the loop COMPOUND, LOOP, and TEST nodes.
+        ICodeNode compoundNode = ICodeFactory.createICodeNode(COMPOUND);
+        ICodeNode loopNode = ICodeFactory.createICodeNode(LOOP);
+        ICodeNode testNode = ICodeFactory.createICodeNode(TEST);
 
-        AssignmentStatementParser assignmentParser = new AssignmentStatementParser(this);
+        // Parse the embedded initial assignment.
+        AssignmentStatementParser assignmentParser =
+            new AssignmentStatementParser(this);
         ICodeNode initAssignNode = assignmentParser.parse(token);
 
         // Set the current line number attribute.
         setLineNumber(initAssignNode, targetToken);
 
+        // The COMPOUND node adopts the initial ASSIGN and the LOOP nodes
+        // as its first and second children.
         compoundNode.addChild(initAssignNode);
         compoundNode.addChild(loopNode);
 
@@ -60,18 +74,17 @@ public class ForStatementParser extends StatementParser
         TokenType direction = token.getType();
 
         // Look for the TO or DOWNTO.
-        if ((direction == PascalTokenType.TO) || (direction == PascalTokenType.DOWNTO))
-        {
-            token = nextToken(); // consume the TO or DOWNTO
+        if ((direction == TO) || (direction == DOWNTO)) {
+            token = nextToken();  // consume the TO or DOWNTO
         }
-        else
-        {
-            direction = PascalTokenType.TO;
-            errorHandler.flag(token, PascalErrorCode.MISSING_TO_DOWNTO, this);
+        else {
+            direction = TO;
+            errorHandler.flag(token, MISSING_TO_DOWNTO, this);
         }
 
         // Create a relational operator node: GT for TO, or LT for DOWNTO.
-        ICodeNode relOpNode = ICodeFactory.createICodeNode(direction == PascalTokenType.TO ? ICodeNodeTypeImpl.GT : ICodeNodeTypeImpl.LT);
+        ICodeNode relOpNode = ICodeFactory.createICodeNode(direction == TO
+                                                           ? GT : LT);
 
         // Copy the control VARIABLE node. The relational operator
         // node adopts the copied VARIABLE node as its first child.
@@ -88,17 +101,13 @@ public class ForStatementParser extends StatementParser
         testNode.addChild(relOpNode);
         loopNode.addChild(testNode);
 
-        // Synchronize at the DO
+        // Synchronize at the DO.
         token = synchronize(DO_SET);
-        // Look for the TO or DOWNTO.
-        if ((token.getType() == PascalTokenType.DO))
-        {
-            token = nextToken(); // consume the DO
+        if (token.getType() == DO) {
+            token = nextToken();  // consume the DO
         }
-        else
-        {
-            direction = PascalTokenType.TO;
-            errorHandler.flag(token, PascalErrorCode.MISSING_DO, this);
+        else {
+            errorHandler.flag(token, MISSING_DO, this);
         }
 
         // Parse the nested statement. The LOOP node adopts the statement
@@ -108,18 +117,19 @@ public class ForStatementParser extends StatementParser
 
         // Create an assignment with a copy of the control variable
         // to advance the value of the variable.
-        ICodeNode nextAssignNode = ICodeFactory.createICodeNode(ICodeNodeTypeImpl.ASSIGN);
+        ICodeNode nextAssignNode = ICodeFactory.createICodeNode(ASSIGN);
         nextAssignNode.addChild(controlVarNode.copy());
 
         // Create the arithmetic operator node:
         // ADD for TO, or SUBTRACT for DOWNTO.
-        ICodeNode arithOpNode = ICodeFactory.createICodeNode(direction == PascalTokenType.TO ? ICodeNodeTypeImpl.ADD : ICodeNodeTypeImpl.SUBTRACT);
+        ICodeNode arithOpNode = ICodeFactory.createICodeNode(direction == TO
+                                                             ? ADD : SUBTRACT);
 
         // The operator node adopts a copy of the loop variable as its
         // first child and the value 1 as its second child.
         arithOpNode.addChild(controlVarNode.copy());
-        ICodeNode oneNode = ICodeFactory.createICodeNode(ICodeNodeTypeImpl.INTEGER_CONSTANT);
-        oneNode.setAttribute(ICodeKeyImpl.VALUE, 1);
+        ICodeNode oneNode = ICodeFactory.createICodeNode(INTEGER_CONSTANT);
+        oneNode.setAttribute(VALUE, 1);
         arithOpNode.addChild(oneNode);
 
         // The next ASSIGN node adopts the arithmetic operator node as its
@@ -127,6 +137,7 @@ public class ForStatementParser extends StatementParser
         // third child.
         nextAssignNode.addChild(arithOpNode);
         loopNode.addChild(nextAssignNode);
+
         // Set the current line number attribute.
         setLineNumber(nextAssignNode, targetToken);
 
