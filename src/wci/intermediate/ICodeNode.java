@@ -11,4 +11,6 @@ public interface ICodeNode
     public void setAttribute(ICodeKey key, Object value);
     public Object getAttribute(ICodeKey key);
     public ICodeNode copy();
+    public void setTypeSpec(TypeSpec typeSpec);
+    public TypeSpec getTypeSpec();
 }

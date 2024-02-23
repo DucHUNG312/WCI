@@ -5,6 +5,9 @@ import java.util.EnumSet;
 import wci.frontend.*;
 import wci.frontend.pascal.*;
 import wci.intermediate.*;
+import wci.intermediate.symtabimpl.Predefined;
+import wci.intermediate.typeimpl.TypeChecker;
+import wci.intermediate.typeimpl.TypeFormImpl;
 
 import static wci.frontend.pascal.PascalTokenType.*;
 import static wci.frontend.pascal.PascalErrorCode.*;
@@ -58,11 +61,22 @@ public class ForStatementParser extends StatementParser
 
         // Parse the embedded initial assignment.
         AssignmentStatementParser assignmentParser =
-            new AssignmentStatementParser(this);
+                new AssignmentStatementParser(this);
         ICodeNode initAssignNode = assignmentParser.parse(token);
+        TypeSpec controlType = initAssignNode != null
+                ? initAssignNode.getTypeSpec()
+                : Predefined.undefinedType;
 
         // Set the current line number attribute.
         setLineNumber(initAssignNode, targetToken);
+
+        // Type check: The control variable's type must be integer
+        //             or enumeration.
+        if (!TypeChecker.isInteger(controlType) &&
+                (controlType.getForm() != TypeFormImpl.ENUMERATION))
+        {
+            errorHandler.flag(token, INCOMPATIBLE_TYPES, this);
+        }
 
         // The COMPOUND node adopts the initial ASSIGN and the LOOP nodes
         // as its first and second children.
@@ -84,7 +98,8 @@ public class ForStatementParser extends StatementParser
 
         // Create a relational operator node: GT for TO, or LT for DOWNTO.
         ICodeNode relOpNode = ICodeFactory.createICodeNode(direction == TO
-                                                           ? GT : LT);
+                ? GT : LT);
+        relOpNode.setTypeSpec(Predefined.booleanType);
 
         // Copy the control VARIABLE node. The relational operator
         // node adopts the copied VARIABLE node as its first child.
@@ -94,7 +109,16 @@ public class ForStatementParser extends StatementParser
         // Parse the termination expression. The relational operator node
         // adopts the expression as its second child.
         ExpressionParser expressionParser = new ExpressionParser(this);
-        relOpNode.addChild(expressionParser.parse(token));
+        ICodeNode exprNode = expressionParser.parse(token);
+        relOpNode.addChild(exprNode);
+
+        // Type check: The termination expression type must be assignment
+        //             compatible with the control variable's type.
+        TypeSpec exprType = exprNode != null ? exprNode.getTypeSpec()
+                : Predefined.undefinedType;
+        if (!TypeChecker.areAssignmentCompatible(controlType, exprType)) {
+            errorHandler.flag(token, INCOMPATIBLE_TYPES, this);
+        }
 
         // The TEST node adopts the relational operator node as its only child.
         // The LOOP node adopts the TEST node as its first child.
@@ -118,18 +142,21 @@ public class ForStatementParser extends StatementParser
         // Create an assignment with a copy of the control variable
         // to advance the value of the variable.
         ICodeNode nextAssignNode = ICodeFactory.createICodeNode(ASSIGN);
+        nextAssignNode.setTypeSpec(controlType);
         nextAssignNode.addChild(controlVarNode.copy());
 
         // Create the arithmetic operator node:
         // ADD for TO, or SUBTRACT for DOWNTO.
         ICodeNode arithOpNode = ICodeFactory.createICodeNode(direction == TO
-                                                             ? ADD : SUBTRACT);
+                ? ADD : SUBTRACT);
+        arithOpNode.setTypeSpec(Predefined.integerType);
 
-        // The operator node adopts a copy of the loop variable as its
+        // The next operator node adopts a copy of the loop variable as its
         // first child and the value 1 as its second child.
         arithOpNode.addChild(controlVarNode.copy());
         ICodeNode oneNode = ICodeFactory.createICodeNode(INTEGER_CONSTANT);
         oneNode.setAttribute(VALUE, 1);
+        oneNode.setTypeSpec(Predefined.integerType);
         arithOpNode.addChild(oneNode);
 
         // The next ASSIGN node adopts the arithmetic operator node as its

@@ -3,6 +3,7 @@ package wci.backend.interpreter.executors;
 import wci.backend.interpreter.Executor;
 import wci.intermediate.ICodeNode;
 import wci.intermediate.icodeimpl.ICodeKeyImpl;
+import wci.intermediate.icodeimpl.ICodeNodeTypeImpl;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -61,6 +62,10 @@ public class SelectExecutor extends StatementExecutor
             for (ICodeNode constantNode : constantsList)
             {
                 Object value = constantNode.getAttribute(ICodeKeyImpl.VALUE);
+                if(constantNode.getType() == ICodeNodeTypeImpl.STRING_CONSTANT)
+                {
+                    value = ((String)value).charAt(0);
+                }
                 jumpTable.put(value, statementNode);
             }
         }
