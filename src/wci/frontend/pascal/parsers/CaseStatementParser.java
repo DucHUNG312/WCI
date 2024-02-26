@@ -30,11 +30,11 @@ public class CaseStatementParser extends StatementParser
 
     // Synchronization set for starting a CASE option constant.
     private static final EnumSet<PascalTokenType> CONSTANT_START_SET =
-            EnumSet.of(IDENTIFIER, INTEGER, PLUS, MINUS, STRING);
+        EnumSet.of(IDENTIFIER, INTEGER, PLUS, MINUS, STRING);
 
     // Synchronization set for OF.
     private static final EnumSet<PascalTokenType> OF_SET =
-            CONSTANT_START_SET.clone();
+        CONSTANT_START_SET.clone();
     static {
         OF_SET.add(OF);
         OF_SET.addAll(StatementParser.STMT_FOLLOW_SET);
@@ -47,7 +47,7 @@ public class CaseStatementParser extends StatementParser
      * @throws Exception if an error occurred.
      */
     public ICodeNode parse(Token token)
-            throws Exception
+        throws Exception
     {
         token = nextToken();  // consume the CASE
 
@@ -63,10 +63,10 @@ public class CaseStatementParser extends StatementParser
         // Type check: The CASE expression's type must be integer, character,
         //             or enumeration.
         TypeSpec exprType = exprNode != null ? exprNode.getTypeSpec()
-                : Predefined.undefinedType;
+                                             : Predefined.undefinedType;
         if (!TypeChecker.isInteger(exprType) &&
-                !TypeChecker.isChar(exprType) &&
-                (exprType.getForm() != ENUMERATION))
+            !TypeChecker.isChar(exprType) &&
+            (exprType.getForm() != ENUMERATION))
         {
             errorHandler.flag(token, INCOMPATIBLE_TYPES, this);
         }
@@ -125,14 +125,14 @@ public class CaseStatementParser extends StatementParser
      */
     private ICodeNode parseBranch(Token token, TypeSpec expressionType,
                                   HashSet<Object> constantSet)
-            throws Exception
+        throws Exception
     {
         // Create an SELECT_BRANCH node and a SELECT_CONSTANTS node.
         // The SELECT_BRANCH node adopts the SELECT_CONSTANTS node as its
         // first child.
         ICodeNode branchNode = ICodeFactory.createICodeNode(SELECT_BRANCH);
         ICodeNode constantsNode =
-                ICodeFactory.createICodeNode(SELECT_CONSTANTS);
+                               ICodeFactory.createICodeNode(SELECT_CONSTANTS);
         branchNode.addChild(constantsNode);
 
         // Parse the list of CASE branch constants.
@@ -158,7 +158,7 @@ public class CaseStatementParser extends StatementParser
 
     // Synchronization set for COMMA.
     private static final EnumSet<PascalTokenType> COMMA_SET =
-            CONSTANT_START_SET.clone();
+        CONSTANT_START_SET.clone();
     static {
         COMMA_SET.add(COMMA);
         COMMA_SET.add(COLON);
@@ -178,14 +178,14 @@ public class CaseStatementParser extends StatementParser
                                    TypeSpec expressionType,
                                    ICodeNode constantsNode,
                                    HashSet<Object> constantSet)
-            throws Exception
+        throws Exception
     {
         // Loop to parse each constant.
         while (CONSTANT_START_SET.contains(token.getType())) {
 
             // The constants list node adopts the constant node.
             constantsNode.addChild(parseConstant(token, expressionType,
-                    constantSet));
+                                                 constantSet));
 
             // Synchronize at the comma between constants.
             token = synchronize(COMMA_SET);
@@ -212,7 +212,7 @@ public class CaseStatementParser extends StatementParser
      */
     private ICodeNode parseConstant(Token token, TypeSpec expressionType,
                                     HashSet<Object> constantSet)
-            throws Exception
+        throws Exception
     {
         TokenType sign = null;
         ICodeNode constantNode = null;
@@ -248,8 +248,8 @@ public class CaseStatementParser extends StatementParser
 
             case STRING: {
                 constantNode =
-                        parseCharacterConstant(token, (String) token.getValue(),
-                                sign);
+                    parseCharacterConstant(token, (String) token.getValue(),
+                                           sign);
                 constantType = Predefined.charType;
                 break;
             }
@@ -275,7 +275,7 @@ public class CaseStatementParser extends StatementParser
         // Type check: The constant type must be comparison compatible
         //             with the CASE expression type.
         if (!TypeChecker.areComparisonCompatible(expressionType,
-                constantType)) {
+                                                 constantType)) {
             errorHandler.flag(token, INCOMPATIBLE_TYPES, this);
         }
 
@@ -292,7 +292,7 @@ public class CaseStatementParser extends StatementParser
      * @return the constant node.
      */
     private ICodeNode parseIdentifierConstant(Token token, TokenType sign)
-            throws Exception
+        throws Exception
     {
         ICodeNode constantNode = null;
         TypeSpec constantType = null;

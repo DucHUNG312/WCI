@@ -5,14 +5,14 @@ import java.util.EnumSet;
 import wci.frontend.*;
 import wci.frontend.pascal.*;
 import wci.intermediate.*;
-import wci.intermediate.symtabimpl.Predefined;
-import wci.intermediate.typeimpl.TypeChecker;
-import wci.intermediate.typeimpl.TypeFormImpl;
+import wci.intermediate.symtabimpl.*;
+import wci.intermediate.typeimpl.*;
 
 import static wci.frontend.pascal.PascalTokenType.*;
 import static wci.frontend.pascal.PascalErrorCode.*;
 import static wci.intermediate.icodeimpl.ICodeNodeTypeImpl.*;
 import static wci.intermediate.icodeimpl.ICodeKeyImpl.*;
+import static wci.intermediate.typeimpl.TypeFormImpl.ENUMERATION;
 
 public class ForStatementParser extends StatementParser
 {
@@ -61,11 +61,11 @@ public class ForStatementParser extends StatementParser
 
         // Parse the embedded initial assignment.
         AssignmentStatementParser assignmentParser =
-                new AssignmentStatementParser(this);
+            new AssignmentStatementParser(this);
         ICodeNode initAssignNode = assignmentParser.parse(token);
         TypeSpec controlType = initAssignNode != null
-                ? initAssignNode.getTypeSpec()
-                : Predefined.undefinedType;
+                                   ? initAssignNode.getTypeSpec()
+                                   : Predefined.undefinedType;
 
         // Set the current line number attribute.
         setLineNumber(initAssignNode, targetToken);
@@ -73,7 +73,7 @@ public class ForStatementParser extends StatementParser
         // Type check: The control variable's type must be integer
         //             or enumeration.
         if (!TypeChecker.isInteger(controlType) &&
-                (controlType.getForm() != TypeFormImpl.ENUMERATION))
+            (controlType.getForm() != ENUMERATION))
         {
             errorHandler.flag(token, INCOMPATIBLE_TYPES, this);
         }
@@ -98,7 +98,7 @@ public class ForStatementParser extends StatementParser
 
         // Create a relational operator node: GT for TO, or LT for DOWNTO.
         ICodeNode relOpNode = ICodeFactory.createICodeNode(direction == TO
-                ? GT : LT);
+                                                           ? GT : LT);
         relOpNode.setTypeSpec(Predefined.booleanType);
 
         // Copy the control VARIABLE node. The relational operator
@@ -115,7 +115,7 @@ public class ForStatementParser extends StatementParser
         // Type check: The termination expression type must be assignment
         //             compatible with the control variable's type.
         TypeSpec exprType = exprNode != null ? exprNode.getTypeSpec()
-                : Predefined.undefinedType;
+                                             : Predefined.undefinedType;
         if (!TypeChecker.areAssignmentCompatible(controlType, exprType)) {
             errorHandler.flag(token, INCOMPATIBLE_TYPES, this);
         }
@@ -148,7 +148,7 @@ public class ForStatementParser extends StatementParser
         // Create the arithmetic operator node:
         // ADD for TO, or SUBTRACT for DOWNTO.
         ICodeNode arithOpNode = ICodeFactory.createICodeNode(direction == TO
-                ? ADD : SUBTRACT);
+                                                             ? ADD : SUBTRACT);
         arithOpNode.setTypeSpec(Predefined.integerType);
 
         // The next operator node adopts a copy of the loop variable as its

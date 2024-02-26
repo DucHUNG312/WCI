@@ -5,16 +5,15 @@ import java.util.HashMap;
 
 import wci.frontend.*;
 import wci.frontend.pascal.*;
+import wci.intermediate.symtabimpl.*;
 import wci.intermediate.*;
 import wci.intermediate.icodeimpl.*;
-import wci.intermediate.symtabimpl.DefinitionImpl;
-import wci.intermediate.symtabimpl.Predefined;
-import wci.intermediate.symtabimpl.SymTabKeyImpl;
-import wci.intermediate.typeimpl.TypeChecker;
+import wci.intermediate.typeimpl.*;
 
 import static wci.frontend.pascal.PascalTokenType.*;
-import static wci.frontend.pascal.PascalTokenType.NOT;
 import static wci.frontend.pascal.PascalErrorCode.*;
+import static wci.intermediate.symtabimpl.SymTabKeyImpl.*;
+import static wci.intermediate.symtabimpl.DefinitionImpl.*;
 import static wci.intermediate.icodeimpl.ICodeNodeTypeImpl.*;
 import static wci.intermediate.icodeimpl.ICodeKeyImpl.*;
 
@@ -66,15 +65,17 @@ public class ExpressionParser extends StatementParser
     /**
      * Parse an expression.
      * @param token the initial token.
-     * @return the root of the generated parse subtree.
+     * @return the root node of the generated parse tree.
      * @throws Exception if an error occurred.
      */
-    private ICodeNode parseExpression(Token token) throws Exception
+    private ICodeNode parseExpression(Token token)
+        throws Exception
     {
         // Parse a simple expression and make the root of its tree
         // the root node.
         ICodeNode rootNode = parseSimpleExpression(token);
-        TypeSpec resultType = rootNode != null ? rootNode.getTypeSpec() : Predefined.undefinedType;
+        TypeSpec resultType = rootNode != null ? rootNode.getTypeSpec()
+                                               : Predefined.undefinedType;
 
         token = currentToken();
         TokenType tokenType = token.getType();
@@ -100,22 +101,18 @@ public class ExpressionParser extends StatementParser
 
             // Type check: The operands must be comparison compatible.
             TypeSpec simExprType = simExprNode != null
-                    ? simExprNode.getTypeSpec()
-                    : Predefined.undefinedType;
-
-            if(TypeChecker.areComparisonCompatible(resultType, simExprType))
-            {
+                                       ? simExprNode.getTypeSpec()
+                                       : Predefined.undefinedType;
+            if (TypeChecker.areComparisonCompatible(resultType, simExprType)) {
                 resultType = Predefined.booleanType;
             }
-            else
-            {
+            else {
                 errorHandler.flag(token, INCOMPATIBLE_TYPES, this);
                 resultType = Predefined.undefinedType;
             }
         }
 
-        if(rootNode != null)
-        {
+        if (rootNode != null) {
             rootNode.setTypeSpec(resultType);
         }
 
@@ -138,31 +135,36 @@ public class ExpressionParser extends StatementParser
     /**
      * Parse a simple expression.
      * @param token the initial token.
-     * @return the root of the generated parse subtree.
+     * @return the root node of the generated parse tree.
      * @throws Exception if an error occurred.
      */
     private ICodeNode parseSimpleExpression(Token token)
         throws Exception
     {
         Token signToken = null;
-        TokenType signType = null; // type of leading sign (if any)
+        TokenType signType = null;  // type of leading sign (if any)
+
         // Look for a leading + or - sign.
         TokenType tokenType = token.getType();
         if ((tokenType == PLUS) || (tokenType == MINUS)) {
             signType = tokenType;
             signToken = token;
-            token = nextToken(); // consume the + or -
+            token = nextToken();  // consume the + or -
         }
+
         // Parse a term and make the root of its tree the root node.
         ICodeNode rootNode = parseTerm(token);
         TypeSpec resultType = rootNode != null ? rootNode.getTypeSpec()
-                : Predefined.undefinedType;
+                                               : Predefined.undefinedType;
+
         // Type check: Leading sign.
         if ((signType != null) && (!TypeChecker.isIntegerOrReal(resultType))) {
             errorHandler.flag(signToken, INCOMPATIBLE_TYPES, this);
         }
+
         // Was there a leading - sign?
         if (signType == MINUS) {
+
             // Create a NEGATE node and adopt the current tree
             // as its child. The NEGATE node becomes the new root node.
             ICodeNode negateNode = ICodeFactory.createICodeNode(NEGATE);
@@ -170,44 +172,56 @@ public class ExpressionParser extends StatementParser
             negateNode.setTypeSpec(rootNode.getTypeSpec());
             rootNode = negateNode;
         }
+
         token = currentToken();
         tokenType = token.getType();
+
         // Loop over additive operators.
         while (ADD_OPS.contains(tokenType)) {
             TokenType operator = tokenType;
+
             // Create a new operator node and adopt the current tree
             // as its first child.
             ICodeNodeType nodeType = ADD_OPS_OPS_MAP.get(operator);
             ICodeNode opNode = ICodeFactory.createICodeNode(nodeType);
             opNode.addChild(rootNode);
-            token = nextToken(); // consume the operator
-            // Parse another term. The operator node adopts
-            // the term&apos;s tree as its second child.
+
+            token = nextToken();  // consume the operator
+
+            // Parse another term.  The operator node adopts
+            // the term's tree as its second child.
             ICodeNode termNode = parseTerm(token);
             opNode.addChild(termNode);
             TypeSpec termType = termNode != null ? termNode.getTypeSpec()
-                    : Predefined.undefinedType;
+                                                 : Predefined.undefinedType;
+
             // The operator node becomes the new root node.
             rootNode = opNode;
+
             // Determine the result type.
             switch ((PascalTokenType) operator) {
+
                 case PLUS:
                 case MINUS: {
                     // Both operands integer ==> integer result.
                     if (TypeChecker.areBothInteger(resultType, termType)) {
                         resultType = Predefined.integerType;
                     }
+
                     // Both real operands or one real and one integer operand
                     // ==> real result.
                     else if (TypeChecker.isAtLeastOneReal(resultType,
-                            termType)) {
+                                                          termType)) {
                         resultType = Predefined.realType;
                     }
+
                     else {
                         errorHandler.flag(token, INCOMPATIBLE_TYPES, this);
                     }
+
                     break;
                 }
+
                 case OR: {
                     // Both operands boolean ==> boolean result.
                     if (TypeChecker.areBothBoolean(resultType, termType)) {
@@ -216,13 +230,17 @@ public class ExpressionParser extends StatementParser
                     else {
                         errorHandler.flag(token, INCOMPATIBLE_TYPES, this);
                     }
+
                     break;
                 }
             }
+
             rootNode.setTypeSpec(resultType);
+
             token = currentToken();
             tokenType = token.getType();
         }
+
         return rootNode;
     }
 
@@ -244,16 +262,16 @@ public class ExpressionParser extends StatementParser
     /**
      * Parse a term.
      * @param token the initial token.
-     * @return the root of the generated parse subtree.
+     * @return the root node of the generated parse tree.
      * @throws Exception if an error occurred.
      */
     private ICodeNode parseTerm(Token token)
-            throws Exception
+        throws Exception
     {
         // Parse a factor and make its node the root node.
         ICodeNode rootNode = parseFactor(token);
         TypeSpec resultType = rootNode != null ? rootNode.getTypeSpec()
-                : Predefined.undefinedType;
+                                               : Predefined.undefinedType;
 
         token = currentToken();
         TokenType tokenType = token.getType();
@@ -275,7 +293,7 @@ public class ExpressionParser extends StatementParser
             ICodeNode factorNode = parseFactor(token);
             opNode.addChild(factorNode);
             TypeSpec factorType = factorNode != null ? factorNode.getTypeSpec()
-                    : Predefined.undefinedType;
+                                                     : Predefined.undefinedType;
 
             // The operator node becomes the new root node.
             rootNode = opNode;
@@ -292,7 +310,7 @@ public class ExpressionParser extends StatementParser
                     // Both real operands or one real and one integer operand
                     // ==> real result.
                     else if (TypeChecker.isAtLeastOneReal(resultType,
-                            factorType)) {
+                                                          factorType)) {
                         resultType = Predefined.realType;
                     }
 
@@ -307,7 +325,7 @@ public class ExpressionParser extends StatementParser
                     // All integer and real operand combinations
                     // ==> real result.
                     if (TypeChecker.areBothInteger(resultType, factorType) ||
-                            TypeChecker.isAtLeastOneReal(resultType, factorType))
+                        TypeChecker.isAtLeastOneReal(resultType, factorType))
                     {
                         resultType = Predefined.realType;
                     }
@@ -356,11 +374,11 @@ public class ExpressionParser extends StatementParser
     /**
      * Parse a factor.
      * @param token the initial token.
-     * @return the root of the generated parse subtree.
+     * @return the root node of the generated parse tree.
      * @throws Exception if an error occurred.
      */
     private ICodeNode parseFactor(Token token)
-            throws Exception
+        throws Exception
     {
         TokenType tokenType = token.getType();
         ICodeNode rootNode = null;
@@ -401,8 +419,8 @@ public class ExpressionParser extends StatementParser
                 rootNode.setAttribute(VALUE, value);
 
                 TypeSpec resultType = value.length() == 1
-                        ? Predefined.charType
-                        : TypeFactory.createStringType(value);
+                                          ? Predefined.charType
+                                          : TypeFactory.createStringType(value);
 
                 token = nextToken();  // consume the string
 
@@ -423,8 +441,8 @@ public class ExpressionParser extends StatementParser
 
                 // Type check: The factor must be boolean.
                 TypeSpec factorType = factorNode != null
-                        ? factorNode.getTypeSpec()
-                        : Predefined.undefinedType;
+                                          ? factorNode.getTypeSpec()
+                                          : Predefined.undefinedType;
                 if (!TypeChecker.isBoolean(factorType)) {
                     errorHandler.flag(token, INCOMPATIBLE_TYPES, this);
                 }
@@ -439,8 +457,8 @@ public class ExpressionParser extends StatementParser
                 // Parse an expression and make its node the root node.
                 rootNode = parseExpression(token);
                 TypeSpec resultType = rootNode != null
-                        ? rootNode.getTypeSpec()
-                        : Predefined.undefinedType;
+                                          ? rootNode.getTypeSpec()
+                                          : Predefined.undefinedType;
 
                 // Look for the matching ) token.
                 token = currentToken();
@@ -463,70 +481,81 @@ public class ExpressionParser extends StatementParser
         return rootNode;
     }
 
-    private ICodeNode parseIdentifier(Token token) throws Exception
+    /**
+     * Parse an identifier.
+     * @param token the current token.
+     * @return the root node of the generated parse tree.
+     * @throws Exception if an error occurred.
+     */
+    private ICodeNode parseIdentifier(Token token)
+        throws Exception
     {
         ICodeNode rootNode = null;
 
+        // Look up the identifier in the symbol table stack.
         String name = token.getText().toLowerCase();
         SymTabEntry id = symTabStack.lookup(name);
 
-        if(id == null)
-        {
+        // Undefined.
+        if (id == null) {
             errorHandler.flag(token, IDENTIFIER_UNDEFINED, this);
             id = symTabStack.enterLocal(name);
-            id.setDefinition(DefinitionImpl.UNDEFINED);
+            id.setDefinition(UNDEFINED);
             id.setTypeSpec(Predefined.undefinedType);
         }
 
         Definition defnCode = id.getDefinition();
 
-        switch ((DefinitionImpl)defnCode)
-        {
-            case CONSTANT:
-            {
-                Object value = id.getAttribute(SymTabKeyImpl.CONSTANT_VALUE);
+        switch ((DefinitionImpl) defnCode) {
+
+            case CONSTANT: {
+                Object value = id.getAttribute(CONSTANT_VALUE);
                 TypeSpec type = id.getTypeSpec();
 
-                if(value instanceof Integer)
-                {
+                if (value instanceof Integer) {
                     rootNode = ICodeFactory.createICodeNode(INTEGER_CONSTANT);
                     rootNode.setAttribute(VALUE, value);
                 }
-                else if (value instanceof  Float)
-                {
+                else if (value instanceof Float) {
                     rootNode = ICodeFactory.createICodeNode(REAL_CONSTANT);
                     rootNode.setAttribute(VALUE, value);
                 }
-                else if(value instanceof String)
-                {
+                else if (value instanceof String) {
                     rootNode = ICodeFactory.createICodeNode(STRING_CONSTANT);
                     rootNode.setAttribute(VALUE, value);
                 }
 
                 id.appendLineNumber(token.getLineNumber());
-                token = nextToken(); // consume the constant identifier
-                if (rootNode != null)
-                {
+                token = nextToken();  // consume the constant identifier
+
+                if (rootNode != null) {
                     rootNode.setTypeSpec(type);
                 }
+
                 break;
             }
-            case ENUMERATION_CONSTANT:
-            {
-                Object value = id.getAttribute(SymTabKeyImpl.CONSTANT_VALUE);
+
+            case ENUMERATION_CONSTANT: {
+                Object value = id.getAttribute(CONSTANT_VALUE);
                 TypeSpec type = id.getTypeSpec();
 
                 rootNode = ICodeFactory.createICodeNode(INTEGER_CONSTANT);
                 rootNode.setAttribute(VALUE, value);
 
                 id.appendLineNumber(token.getLineNumber());
-                token = nextToken();
+                token = nextToken();  // consume the enum constant identifier
 
                 rootNode.setTypeSpec(type);
                 break;
             }
-            default:
-            {
+
+            case FUNCTION: {
+                CallParser callParser = new CallParser(this);
+                rootNode = callParser.parse(token);
+                break;
+            }
+
+            default: {
                 VariableParser variableParser = new VariableParser(this);
                 rootNode = variableParser.parse(token, id);
                 break;

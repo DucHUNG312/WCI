@@ -56,9 +56,11 @@ public class TypeDefinitionsParser extends DeclarationsParser
     /**
      * Parse type definitions.
      * @param token the initial token.
+     * @param parentId the symbol table entry of the parent routine's name.
+     * @return null
      * @throws Exception if an error occurred.
      */
-    public void parse(Token token)
+    public SymTabEntry parse(Token token, SymTabEntry parentId)
         throws Exception
     {
         token = synchronize(IDENTIFIER_SET);
@@ -130,5 +132,7 @@ public class TypeDefinitionsParser extends DeclarationsParser
 
             token = synchronize(IDENTIFIER_SET);
         }
+
+        return null;
     }
 }

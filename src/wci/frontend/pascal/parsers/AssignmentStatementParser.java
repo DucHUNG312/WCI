@@ -5,16 +5,19 @@ import java.util.EnumSet;
 import wci.frontend.*;
 import wci.frontend.pascal.*;
 import wci.intermediate.*;
-import wci.intermediate.symtabimpl.Predefined;
-import wci.intermediate.typeimpl.TypeChecker;
+import wci.intermediate.symtabimpl.*;
+import wci.intermediate.typeimpl.*;
 
 import static wci.frontend.pascal.PascalTokenType.*;
 import static wci.frontend.pascal.PascalErrorCode.*;
 import static wci.intermediate.icodeimpl.ICodeNodeTypeImpl.*;
-import static wci.intermediate.icodeimpl.ICodeKeyImpl.*;
 
 public class AssignmentStatementParser extends StatementParser
 {
+    // Set to true to parse a function name
+    // as the target of an assignment.
+    private boolean isFunctionTarget = false;
+
     /**
      * Constructor.
      * @param parent the parent parser.
@@ -44,12 +47,15 @@ public class AssignmentStatementParser extends StatementParser
         // Create the ASSIGN node.
         ICodeNode assignNode = ICodeFactory.createICodeNode(ASSIGN);
 
-        // Parse the target variable
+        // Parse the target variable.
         VariableParser variableParser = new VariableParser(this);
-        ICodeNode targetNode = variableParser.parse(token);
+        ICodeNode targetNode = isFunctionTarget
+                               ? variableParser.parseFunctionNameTarget(token)
+                               : variableParser.parse(token);
         TypeSpec targetType = targetNode != null ? targetNode.getTypeSpec()
                                                  : Predefined.undefinedType;
 
+        // The ASSIGN node adopts the variable node as its first child.
         assignNode.addChild(targetNode);
 
         // Synchronize on the := token.
@@ -67,14 +73,27 @@ public class AssignmentStatementParser extends StatementParser
         ICodeNode exprNode = expressionParser.parse(token);
         assignNode.addChild(exprNode);
 
+        // Type check: Assignment compatible?
         TypeSpec exprType = exprNode != null ? exprNode.getTypeSpec()
                                              : Predefined.undefinedType;
-        if(!TypeChecker.areAssignmentCompatible(targetType, exprType))
-        {
+        if (!TypeChecker.areAssignmentCompatible(targetType, exprType)) {
             errorHandler.flag(token, INCOMPATIBLE_TYPES, this);
         }
 
         assignNode.setTypeSpec(targetType);
         return assignNode;
+    }
+
+    /**
+     * Parse an assignment to a function name.
+     * @param token Token
+     * @return ICodeNode
+     * @throws Exception
+     */
+    public ICodeNode parseFunctionNameAssignment(Token token)
+        throws Exception
+    {
+        isFunctionTarget = true;
+        return parse(token);
     }
 }

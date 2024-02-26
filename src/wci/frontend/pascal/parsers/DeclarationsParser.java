@@ -47,9 +47,11 @@ public class DeclarationsParser extends PascalParserTD
      * Parse declarations.
      * To be overridden by the specialized declarations parser subclasses.
      * @param token the initial token.
+     * @param parentId the symbol table entry of the parent routine's name.
+     * @return null
      * @throws Exception if an error occurred.
      */
-    public void parse(Token token)
+    public SymTabEntry parse(Token token, SymTabEntry parentId)
         throws Exception
     {
         token = synchronize(DECLARATION_START_SET);
@@ -59,7 +61,7 @@ public class DeclarationsParser extends PascalParserTD
 
             ConstantDefinitionsParser constantDefinitionsParser =
                 new ConstantDefinitionsParser(this);
-            constantDefinitionsParser.parse(token);
+            constantDefinitionsParser.parse(token, null);
         }
 
         token = synchronize(TYPE_START_SET);
@@ -69,7 +71,7 @@ public class DeclarationsParser extends PascalParserTD
 
             TypeDefinitionsParser typeDefinitionsParser =
                 new TypeDefinitionsParser(this);
-            typeDefinitionsParser.parse(token);
+            typeDefinitionsParser.parse(token, null);
         }
 
         token = synchronize(VAR_START_SET);
@@ -80,9 +82,29 @@ public class DeclarationsParser extends PascalParserTD
             VariableDeclarationsParser variableDeclarationsParser =
                 new VariableDeclarationsParser(this);
             variableDeclarationsParser.setDefinition(VARIABLE);
-            variableDeclarationsParser.parse(token);
+            variableDeclarationsParser.parse(token, null);
         }
 
         token = synchronize(ROUTINE_START_SET);
+        TokenType tokenType = token.getType();
+
+        while ((tokenType == PROCEDURE) || (tokenType == FUNCTION)) {
+            DeclaredRoutineParser routineParser =
+                new DeclaredRoutineParser(this);
+            routineParser.parse(token, parentId);
+
+            // Look for one or more semicolons after a definition.
+            token = currentToken();
+            if (token.getType() == SEMICOLON) {
+                while (token.getType() == SEMICOLON) {
+                    token = nextToken();  // consume the ;
+                }
+            }
+
+            token = synchronize(ROUTINE_START_SET);
+            tokenType = token.getType();
+        }
+
+        return null;
     }
 }
