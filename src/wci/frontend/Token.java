@@ -13,7 +13,7 @@ public class Token
     {
         this.source = source;
         this.lineNum = source.getLineNum();
-        this.position = source.getCurrentPos();
+        this.position = source.getPosition();
 
         extract();
     }
@@ -64,10 +64,5 @@ public class Token
     protected char peekChar() throws Exception
     {
         return source.peekChar();
-    }
-
-    protected char peekNextChar() throws Exception
-    {
-        return source.peekNextChar();
     }
 }

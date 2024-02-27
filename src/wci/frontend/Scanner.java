@@ -1,40 +1,99 @@
 package wci.frontend;
+
 public abstract class Scanner
 {
-    protected Source source;
-    private Token currentToken;
+    protected Source source;     // source
+    private Token currentToken;  // current token
 
+    /**
+     * Constructor
+     * @param source the source to be used with this scanner.
+     */
     public Scanner(Source source)
     {
         this.source = source;
     }
 
+    /**
+     * @return the current token.
+     */
     public Token currentToken()
     {
         return currentToken;
     }
 
-    public Token nextToken() throws Exception
+    /**
+     * Return next token from the source.
+     * @return the next token.
+     * @throws Exception if an error occurred.
+     */
+    public Token nextToken()
+            throws Exception
     {
         currentToken = extractToken();
         return currentToken;
     }
 
-    protected abstract Token extractToken()  throws Exception;
+    /**
+     * Do the actual work of extracting and returning the next token from the
+     * source. Implemented by scanner subclasses.
+     * @return the next token.
+     * @throws Exception if an error occurred.
+     */
+    protected abstract Token extractToken()
+            throws Exception;
 
-    public char currentChar() throws Exception
+    /**
+     * Call the source's currentChar() method.
+     * @return the current character from the source.
+     * @throws Exception if an error occurred.
+     */
+    public char currentChar()
+            throws Exception
     {
         return source.currentChar();
     }
 
-    public char nextChar() throws Exception
+    /**
+     * Call the source's nextChar() method.
+     * @return the next character from the source.
+     * @throws Exception if an error occurred.
+     */
+    public char nextChar()
+            throws Exception
     {
         return source.nextChar();
     }
 
-    public char peekChar() throws Exception
+    /**
+     * Call the source's atEol() method.
+     * @return true if at the end of the source line, else return false.
+     * @throws Exception if an error occurred.
+     */
+    public boolean atEol()
+            throws Exception
     {
-        return source.peekChar();
+        return source.atEol();
     }
 
+    /**
+     * Call the source's atEof() method.
+     * @return true if at the end of the source file, else return false.
+     * @throws Exception if an error occurred.
+     */
+    public boolean atEof()
+            throws Exception
+    {
+        return source.atEof();
+    }
+
+    /**
+     * Call the source's skipToNextLine() method.
+     * @throws Exception if an error occurred.
+     */
+    public void skipToNextLine()
+            throws Exception
+    {
+        source.skipToNextLine();
+    }
 }
