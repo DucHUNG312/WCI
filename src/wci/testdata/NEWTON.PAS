@@ -4,8 +4,24 @@ CONST
     epsilon = 1e-6;
 
 VAR
-    number       : integer;
-    root, sqroot : real;
+    number : integer;
+
+FUNCTION root(x : real) : real;
+    VAR
+        r : real;
+
+    BEGIN
+        r := 1;
+        REPEAT
+            r := (x/r + r)/2;
+        UNTIL abs(x/sqr(r) - 1) < epsilon;
+        root := r;
+    END;
+
+PROCEDURE print(n : integer; root : real);
+    BEGIN
+        writeln('The square root of ', number:4, ' is ', root:8:4);
+    END;
 
 BEGIN
     REPEAT
@@ -14,23 +30,13 @@ BEGIN
         read(number);
 
         IF number = 0 THEN BEGIN
-            writeln(number:12, 0.0:12:6);
+            print(number, 0.0);
         END
         ELSE IF number < 0 THEN BEGIN
             writeln('*** ERROR:  number < 0');
         END
         ELSE BEGIN
-            sqroot := sqrt(number);
-            writeln(number:12, sqroot:12:6);
-            writeln;
-
-            root := 1;
-            REPEAT
-                root := (number/root + root)/2;
-                writeln(root:24:6,
-                        100*abs(root - sqroot)/sqroot:12:2,
-                        '%')
-            UNTIL abs(number/sqr(root) - 1) < epsilon;
+            print(number, root(number));
         END
     UNTIL number = 0
 END.
